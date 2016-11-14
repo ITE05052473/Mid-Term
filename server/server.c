@@ -56,7 +56,7 @@ void getResult(){
 
 int main(int atgc, char *argv[])
 {
-    int socket_desc, new_socket, c;
+    int socket_desc, new_socket, c, pid;
     struct sockaddr_in server, client;
     char *reply_message;
     char recv_message2[4];
@@ -77,6 +77,7 @@ int main(int atgc, char *argv[])
     listen(socket_desc, 3);
     puts("Waiting for incoming connections...");
     c = sizeof(struct sockaddr_in);
+
     while ((new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c)))
     {
         if (new_socket < 0)
@@ -85,7 +86,19 @@ int main(int atgc, char *argv[])
             return 1;
         }
         puts("Connection accepted");
-	guess:while (1)
+
+	pid=fork();
+	if(pid<0)
+	{
+	    perror("Error on pork");
+	    exit(1);
+	}
+	if(pid==0)
+	{
+	    close(socket_desc);
+	    printf("New connection, my process id is %d\n", getpid()); 
+	    
+	    guess:while (1)
         {   
             GuessNum();
             puts("number:");
@@ -130,6 +143,15 @@ int main(int atgc, char *argv[])
                 }
             }
         }
+
+	    exit(0); 
+	}
+	else
+	{
+	     close(new_socket);
+	}
+
+
     }
     return 0;
 }
